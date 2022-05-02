@@ -1,0 +1,333 @@
+---
+title: "HW4"
+author: "Rohan Mantri"
+date: "30/04/2022"
+output: 
+    md_document
+---
+
+```{r include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, cache = TRUE)
+
+library(tidyverse)
+library(knitr)
+library(ggfortify)
+library(foreach)
+library(arules)
+library(arulesViz)
+library(factoextra)
+library(ggpubr)
+
+```
+
+## Question 1: Clustering and PCA
+
+### I first ran PCA on those 11 chemical properties.
+
+```{r Wine Setup}
+
+wine = read.csv("C:\\Users\\mantr\\Desktop\\Mona\\Masters\\Applications\\University of Texas at Austin\\Spring 2022\\Data Mining\\HW4\\wine.csv")
+
+set.seed(454)
+
+wine$color = wine$color %>% as.factor
+wine$quality = wine$quality %>% as.factor
+
+```
+
+```{r Wine PCA}
+
+wine_i = wine[,1:11]
+PCAwine = prcomp(wine_i, scale=TRUE, rank=3)
+
+autoplot(PCAwine, data = wine, colour = 'color') +
+  labs(title = "Graph of PC1 and PC2, by colors of wine")
+
+autoplot(PCAwine, data = wine, colour = 'quality', alpha = .9, 
+         loadings = TRUE, loadings.colour = 'pink',
+         loadings.label = TRUE, loadings.label.size = 3) +
+  labs(title = "Graph of PC1 and PC2, by qualit ratings of wine")
+```
+### I observed that red and white wines form clusters in the first graph. This implies that clustering could be effective even after PCA has been applied. The second graph shows that the attributes are dispersed, making it difficult to identify a pattern.
+
+```{r Wine Clustering}
+
+wine_ii = scale(wine[,1:11])
+
+clustered_wine_i = kmeans(wine_ii, 2, nstart=50)
+qplot(quality, color, data=wine, color=factor(clustered_wine_i$cluster)) +
+  labs(title = "Graph of clusters by each quality rating and color of wine",
+        color = "cluster")
+
+clustered_wine_i$color = wine$color
+
+clustered_wine_ii = kmeans(wine_ii, 4, nstart=50)
+qplot(quality, color, data=wine, color=factor(clustered_wine_ii$cluster)) +
+  labs(title = "Graph of clusters by each quality rating and color of wine",
+        color = "cluster")
+
+```
+### I chose the two-cluster model initially to test if it would naturally produce two clusters of red and white wines. The first graph depicts how the two clusters are generated based on color and quality; one cluster appears to have red wine while the other appears to have white wine across all qualities.
+
+### Next, I chose the four-cluster model in the hopes of seeing four types of wine, low/high qualities, and red/wine. The second graph depicts the four clusters across different wine colors and qualities. I can't seem to locate a consistent pattern for the groupings I was looking for.
+
+### I then graphed the clusters on the PCA axes, with the shape indicating color/quality. We can see how the clusters are useful for explaining colors, but not so much for explaining qualities. That is, in the first graph, practically all points belong to one color of wine, whereas there are numerous points in different clusters with the same quality.
+
+```{r wineclustering-graph1}
+
+## Using PCA to graph clusters
+# colors - two clusters
+# Coordinates of individuals
+
+wine_coordinates <- as.data.frame(get_pca_ind(PCAwine)$coord)
+
+# Add clusters obtained using the K-means algorithm
+
+wine_coordinates$cluster <- factor(clustered_wine_i$cluster)
+
+# Add Species groups from the original data sett
+
+wine_coordinates$color <- wine$color
+
+# Percentage of variance explained by dimensions
+
+eigen_values <- round(get_eigenvalue(PCAwine), 1)
+variance.percent <- eigen_values$variance.percent
+
+ggscatter(
+  wine_coordinates, x = "Dim.1", y = "Dim.2", 
+  color = "cluster", palette = "npg", ellipse = TRUE, ellipse.type = "convex",
+  shape = "color", size = 1.5,  legend = "right", ggtheme = theme_bw(),
+  xlab = paste0("Dim 1 (", variance.percent[1], "% )" ),
+  ylab = paste0("Dim 2 (", variance.percent[2], "% )" )
+) +
+  labs(title = "Graph of clusters on PCA axes by color of wine")
+
+```
+```{r wineclustering-graph2}
+
+## Using PCA to graph clusters
+# qualities - seven clusters
+# Coordinates of individuals
+
+wine_coordinates <- as.data.frame(get_pca_ind(PCAwine)$coord)
+
+# Add clusters obtained using the K-means algorithm
+
+wine_coordinates$cluster <- factor(clustered_wine_ii$cluster)
+
+# Add Species groups from the original data sett
+
+wine_coordinates$quality <- wine$quality
+
+# Percentage of variance explained by dimensions
+
+eigen_values <- round(get_eigenvalue(PCAwine), 1)
+variance.percent <- eigen_values$variance.percent
+
+ggscatter(
+  wine_coordinates, x = "Dim.1", y = "Dim.2", 
+  color = "cluster", palette = "npg", ellipse = TRUE, ellipse.type = "convex",
+  shape = "quality", size = 1.5,  legend = "right", ggtheme = theme_bw(),
+  xlab = paste0("Dim 1 (", variance.percent[1], "% )" ),
+  ylab = paste0("Dim 2 (", variance.percent[2], "% )" ),
+) +
+  labs(title = "Graph of clusters on PCA axes by each quality rating")
+
+```
+## Question 2: Market Segmentation
+
+```{r Market Segmentation setup}
+
+marketing = read.csv("C:\\Users\\mantr\\Desktop\\Mona\\Masters\\Applications\\University of Texas at Austin\\Spring 2022\\Data Mining\\HW4\\social_marketing.csv")
+
+```
+
+### Let's gather some market knowledge. In this code sample, we'll see what the top five most popular tweet categories are.
+
+```{r top5}
+
+# category having the most amount of tweets
+
+colTotals = colSums(marketing[,-1], na.rm = TRUE) %>% as.data.frame()
+names(colTotals) = c('Total')
+kable(colTotals %>% arrange(desc(Total)) %>% head())
+
+```
+
+### Ignoring `chatter` since it doesn't fit into any of the categories. The top four most popular tweet categories in the dataset are `photo sharing`, `health_nutrition`, `cooking`, `politics` and `sports_fandom`.
+
+### Let's see if we can use a normal PCA algorithm to analyze the data.
+
+```{r PCA}
+
+marketingPCA = prcomp(marketing[,-1], scale=TRUE, rank=3)
+autoplot(marketingPCA) +
+  labs(title = "PCA graph on Market Segments")
+summary(marketingPCA)
+
+```
+### Because we aren't looking for a certain type of tweet, the conventional PCA isn't really useful in this scenario. However, using this graph to organize them into clusters can reveal the categories that are related.
+
+### Let's use a hierarchical clustering model to see if we can combine the categories together to obtain a better picture of the market segments as a whole.
+
+```{r hcluster}
+
+marketing_scaled = scale(marketing[,-1], center = TRUE, scale = TRUE)
+marketing_distance_matrix = dist(marketing_scaled, method='euclidean')
+marketing_clust = hclust(marketing_distance_matrix, method="average")
+plot(marketing_clust, cex=0.8)
+marketing_cluster = cutree(marketing_clust, k=2)
+summary(factor(marketing_cluster))
+
+```
+### The cluster dendogram, which employs euclidean distance and average distance to categorize the marget segments, does not provide any information about the segments in general.
+
+### Let's perform k-means clustering, which, when combined with the PCA approaches, should yield some useful market segments. The first step is to determine the optimal value for k to employ in the `kmeans` approach. Calculate the `withinss`, `betweenss`, and `CH-Index` from these values for each value of `k`. This can assist us in determining the optimal `k` value.
+
+```{r Betweeess_cluster}
+
+k_grid = seq(1, 11, by=1)
+SSE_grid = foreach(k = k_grid, .combine='rbind') %do% {
+cluster_k = kmeans(marketing[,-1], k, nstart=50)
+W = cluster_k$tot.withinss
+B = cluster_k$betweenss
+CH = (B/W)*((nrow(marketing[,-1])-k)/(k-1))
+c(k=k, CH=CH)} %>% as.data.frame
+
+ggplot(SSE_grid) +
+  geom_line(aes(x=k, y=CH)) +
+  labs(title = "CH-Index change over different values of k")
+
+```
+### I decided to go with `k=3` (nearest integer after the peak) as I think the improvement stops after `k=3`.
+
+```{r kmeans_cluster}
+
+marketingCluster = kmeans(marketing[,-1], centers = 3, nstart=50)
+fviz_cluster(marketingCluster, marketing[,-1],
+             palette = c("#2E9FDF", "#00AFBB", "#C8E1AB"),
+             geom = "point",
+             ellipse.type = "convex",
+             ggtheme = theme_bw()
+             )
+
+```
+### This plot depicts how the clusters divide the PCA plot, and it appears that each of these graphs belongs to a separate category. Let's take a closer look at that. I begin by selecting the k-means cluster and grouping the tweets by cluster, then adding the total number of tweets. Remove the words `cluster`, `chatter` and `uncategorized` as they do not belong in any market segment.
+
+```{r kmeans_analysis}
+
+marketingClust = rename(merge(marketing[,-1], marketingCluster$cluster, by="row.names"), cluster = y)
+	
+	marketingClusterTable = marketingClust %>%
+	  group_by(cluster) %>%
+	  select(-Row.names) %>%
+	  summarize_all(sum) %>%
+	  select(-c(cluster, chatter, uncategorized))
+	
+	marketingClusterTable = t(as.data.frame(marketingClusterTable))
+	
+	marketingClusterTable = tibble::rownames_to_column(marketingClusterTable %>% as.data.frame())
+
+```
+
+### Let's plot the top 5 categories suggested by each of the clusters used in k-means.
+
+```{r top5_eachCluster}
+names(marketingClusterTable) = c("Category", "Cluster1", "Cluster2", "Cluster3")
+	
+	marketingClusterTable %>% mutate(Cluster1= round(Cluster1/sum(Cluster1)*100,2)) %>% top_n(n=10, Cluster1) %>% ggplot() +
+	  geom_col(aes(x=reorder(Category,-Cluster1), y=Cluster1 ), fill = "#2E9FDF") +
+	  labs(y = "Percentage", x="Tweet Categories", 
+	       title = "Top 10 categories within Cluster 1 by the proportion of tweets")
+	
+	marketingClusterTable %>% mutate(Cluster2= round(Cluster2/sum(Cluster2)*100,2)) %>% top_n(n=10, Cluster2) %>% ggplot() + 
+	  geom_col(aes(x=reorder(Category,-Cluster2), y=Cluster2 ), fill = "#00AFBB") +
+	  labs(y = "Percentage", x="Tweet Categories", 
+	       title = "Top 10 categories within Cluster 2 by the proportion of tweets")
+	
+	marketingClusterTable %>% mutate(Cluster2= round(Cluster2/sum(Cluster2)*100,2)) %>% top_n(n=10, Cluster3) %>% ggplot() + 
+	  geom_col(aes(x=reorder(Category,-Cluster3), y=Cluster3 ), fill = "#C8E1AB") +
+	  labs(y = "Percentage", x="Tweet Categories", 
+	       title = "Top 10 categories within Cluster 3 by the proportion of tweets")
+
+```
+### Each clusters give us interesting results,
+
+### (i) `Cluster1` - The top ten categories in the graph all have a similar percentage of tweets, ranging from 4-6 percent. This category includes the vast majority of the population.
+
+### (ii) `Cluster2` - the top four categories, `photo sharing,` `cooking,"shopping,` and `college uni,` create a market category. This, I believe, is typical of young and college students.
+
+### (iii) `Cluster3` consists of three market segments: `health nutrition,` `personal fitness,` and `cooking.` This is a separate `health` market segment.
+
+### There are a lot of similarities in the tweet categories between the different clusters, which is to be expected, but `k-means` extracts some helpful information on the `market categories` of people who use the `NutrientH20` product. We recommend that they target `college students,` `younger audience,` and those interested in `personal fitness,` and `healthy living,` based on this.
+
+## Question 3: Association rules for grocery purchase
+
+```{r Groceries setup}
+
+groceries_raw = readLines("C:\\Users\\mantr\\Desktop\\Mona\\Masters\\Applications\\University of Texas at Austin\\Spring 2022\\Data Mining\\HW4\\groceries.txt")
+
+groceries = as.list(strsplit(groceries_raw, ","))
+groceries = lapply(groceries, unique)
+
+```
+
+```{r Grocery trans and rules}
+
+#average number of items in groceries is 4.41
+matrix(data= c(lengths(groceries)),
+           ncol = 1,
+           byrow = TRUE) %>% mean
+
+## Cast this resulting list of playlists as a special arules "transactions" class.
+trans_grocery = as(groceries, "transactions")
+#summary(trans_grocery)
+
+# Now run the 'apriori' algorithm
+# Look at rules with support > .01 & confidence >.1 & length (# artists) <= 5
+rules_grocery = apriori(trans_grocery, 
+	parameter=list(support=.002, confidence=.4, maxlen=4))
+                         
+# inspect(rules_grocery)
+# summary(rules_grocery)
+
+```
+### I set the `maxlen` to 4 because the average number of items in a grocery list is 4.41. Due to the large number of items, I chose a low support of.002 as the threshold, with a confidence of.4. I didn't get many rules with more support. Plus, I figured that if someone buys something with a probability of 0.4 after placing something else in the shopping cart, it's very significant. Out of all the rules with the parameters I supplied, the rules with lift greater than 4 are listed in the table below.
+
+```{r groceries-kable}
+## Choose a subset
+a = inspect(subset(rules_grocery, lift > 4)) %>% as.data.frame
+```
+### It's interesting to see that if a person buys `liquor`, that person is likely to buy `bottled beer` as well, which makes a lot of sense. There are many rules with `root vegetables` on the right hand side.
+
+```{r Groceries Rules plot}
+
+plot(rules_grocery)
+
+plot(rules_grocery, measure = c("support", "lift"), shading = "confidence")
+
+plot(rules_grocery, method='two-key plot')
+
+```
+### We can observe from these three graphs that the bulk of rules have less than 0.01 support. Another intriguing fact is that many regulations have a three or four-digit order. They also have lesser support, which is probably due to the fact that that particular combination is unlikely to be found in a shopping basket. 
+
+### I then plotted top 100 rules by lift
+
+```{r}
+
+plot(head(rules_grocery, 100, by='lift'), method="graph", control=list(type="itemsets"))
+saveAsGraph(head(rules_grocery, 100, by='lift'), file = "rules_grocery.graphml")
+
+```
+### We can see the highest lift rule of `liquor` `&rarr;` `bottled beer`. `root vegetables` and `other vegetables` have very big circles.
+
+### The graph below shows top 50 rules by lift.
+
+```{r}
+
+plot(head(rules_grocery, 50, by='lift'),method="graph")
+
+```
+
