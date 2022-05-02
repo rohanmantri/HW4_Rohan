@@ -341,7 +341,7 @@ saveAsGraph(sub, file = "groceries_rule_final3.graphml")
 ```
 
 ```{r}
-img <- png::readPNG("C:\\Users\\mantr\\Desktop\\Gephi.png")
+img <- png::readPNG("C:\\Users\\mantr\\Desktop\\Screenshot 2022-05-02 165127.png")
 grid::grid.raster(img)
 ```
 
