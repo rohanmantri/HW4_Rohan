@@ -48,7 +48,9 @@ autoplot(PCAwine, data = wine, colour = 'quality', alpha = .9,
          loadings = TRUE, loadings.colour = 'pink',
          loadings.label = TRUE, loadings.label.size = 3) +
   labs(title = "Graph of PC1 and PC2, by qualit ratings of wine")
+
 ```
+
 ### I observed that red and white wines form clusters in the first graph. This implies that clustering could be effective even after PCA has been applied. The second graph shows that the attributes are dispersed, making it difficult to identify a pattern.
 
 ```{r Wine Clustering}
@@ -68,6 +70,7 @@ qplot(quality, color, data=wine, color=factor(clustered_wine_ii$cluster)) +
         color = "cluster")
 
 ```
+
 ### I chose the two-cluster model initially to test if it would naturally produce two clusters of red and white wines. The first graph depicts how the two clusters are generated based on color and quality; one cluster appears to have red wine while the other appears to have white wine across all qualities.
 
 ### Next, I chose the four-cluster model in the hopes of seeing four types of wine, low/high qualities, and red/wine. The second graph depicts the four clusters across different wine colors and qualities. I can't seem to locate a consistent pattern for the groupings I was looking for.
@@ -136,6 +139,7 @@ ggscatter(
   labs(title = "Graph of clusters on PCA axes by each quality rating")
 
 ```
+
 ## Question 2: Market Segmentation
 
 ```{r Market Segmentation setup}
@@ -182,6 +186,7 @@ marketing_cluster = cutree(marketing_clust, k=2)
 summary(factor(marketing_cluster))
 
 ```
+
 ### The cluster dendogram, which employs euclidean distance and average distance to categorize the marget segments, does not provide any information about the segments in general.
 
 ### Let's perform k-means clustering, which, when combined with the PCA approaches, should yield some useful market segments. The first step is to determine the optimal value for k to employ in the `kmeans` approach. Calculate the `withinss`, `betweenss`, and `CH-Index` from these values for each value of `k`. This can assist us in determining the optimal `k` value.
@@ -201,6 +206,7 @@ ggplot(SSE_grid) +
   labs(title = "CH-Index change over different values of k")
 
 ```
+
 ### I decided to go with `k=3` (nearest integer after the peak) as I think the improvement stops after `k=3`.
 
 ```{r kmeans_cluster}
@@ -214,6 +220,7 @@ fviz_cluster(marketingCluster, marketing[,-1],
              )
 
 ```
+
 ### This plot depicts how the clusters divide the PCA plot, and it appears that each of these graphs belongs to a separate category. Let's take a closer look at that. I begin by selecting the k-means cluster and grouping the tweets by cluster, then adding the total number of tweets. Remove the words `cluster`, `chatter` and `uncategorized` as they do not belong in any market segment.
 
 ```{r kmeans_analysis}
@@ -294,12 +301,14 @@ rules_grocery = apriori(trans_grocery,
 # summary(rules_grocery)
 
 ```
+
 ### I set the `maxlen` to 4 because the average number of items in a grocery list is 4.41. Due to the large number of items, I chose a low support of.002 as the threshold, with a confidence of.4. I didn't get many rules with more support. Plus, I figured that if someone buys something with a probability of 0.4 after placing something else in the shopping cart, it's very significant. Out of all the rules with the parameters I supplied, the rules with lift greater than 4 are listed in the table below.
 
 ```{r groceries-kable}
 ## Choose a subset
 a = inspect(subset(rules_grocery, lift > 4)) %>% as.data.frame
 ```
+
 ### It's interesting to see that if a person buys `liquor`, that person is likely to buy `bottled beer` as well, which makes a lot of sense. There are many rules with `root vegetables` on the right hand side.
 
 ```{r Groceries Rules plot}
@@ -311,6 +320,7 @@ plot(rules_grocery, measure = c("support", "lift"), shading = "confidence")
 plot(rules_grocery, method='two-key plot')
 
 ```
+
 ### We can observe from these three graphs that the bulk of rules have less than 0.01 support. Another intriguing fact is that many regulations have a three or four-digit order. They also have lesser support, which is probably due to the fact that that particular combination is unlikely to be found in a shopping basket. 
 
 ### I then plotted top 100 rules by lift
@@ -321,6 +331,7 @@ plot(head(rules_grocery, 100, by='lift'), method="graph", control=list(type="ite
 saveAsGraph(head(rules_grocery, 100, by='lift'), file = "rules_grocery.graphml")
 
 ```
+
 ### We can see the highest lift rule of `liquor` `&rarr;` `bottled beer`. `root vegetables` and `other vegetables` have very big circles.
 
 ### The graph below shows top 50 rules by lift.

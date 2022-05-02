@@ -3,25 +3,21 @@
 ### I first ran PCA on those 11 chemical properties.
 
 ![](HW4Mark_files/figure-markdown_strict/Wine%20PCA-1.png)![](HW4Mark_files/figure-markdown_strict/Wine%20PCA-2.png)
-### I observed that red and white wines form clusters in the first
-graph. This implies that clustering could be effective even after PCA
-has been applied. The second graph shows that the attributes are
-dispersed, making it difficult to identify a pattern.
+
+### I observed that red and white wines form clusters in the first graph. This implies that clustering could be effective even after PCA has been applied. The second graph shows that the attributes are dispersed, making it difficult to identify a pattern.
 
 ![](HW4Mark_files/figure-markdown_strict/Wine%20Clustering-1.png)![](HW4Mark_files/figure-markdown_strict/Wine%20Clustering-2.png)
-### I chose the two-cluster model initially to test if it would
-naturally produce two clusters of red and white wines. The first graph
-depicts how the two clusters are generated based on color and quality;
-one cluster appears to have red wine while the other appears to have
-white wine across all qualities.
+
+### I chose the two-cluster model initially to test if it would naturally produce two clusters of red and white wines. The first graph depicts how the two clusters are generated based on color and quality; one cluster appears to have red wine while the other appears to have white wine across all qualities.
 
 ### Next, I chose the four-cluster model in the hopes of seeing four types of wine, low/high qualities, and red/wine. The second graph depicts the four clusters across different wine colors and qualities. I can’t seem to locate a consistent pattern for the groupings I was looking for.
 
 ### I then graphed the clusters on the PCA axes, with the shape indicating color/quality. We can see how the clusters are useful for explaining colors, but not so much for explaining qualities. That is, in the first graph, practically all points belong to one color of wine, whereas there are numerous points in different clusters with the same quality.
 
 ![](HW4Mark_files/figure-markdown_strict/wineclustering-graph1-1.png)
-![](HW4Mark_files/figure-markdown_strict/wineclustering-graph2-1.png) ##
-Question 2: Market Segmentation
+![](HW4Mark_files/figure-markdown_strict/wineclustering-graph2-1.png)
+
+## Question 2: Market Segmentation
 
 ### Let’s gather some market knowledge. In this code sample, we’ll see what the top five most popular tweet categories are.
 
@@ -85,17 +81,13 @@ Question 2: Market Segmentation
 
 ### Let’s perform k-means clustering, which, when combined with the PCA approaches, should yield some useful market segments. The first step is to determine the optimal value for k to employ in the `kmeans` approach. Calculate the `withinss`, `betweenss`, and `CH-Index` from these values for each value of `k`. This can assist us in determining the optimal `k` value.
 
-![](HW4Mark_files/figure-markdown_strict/Betweeess_cluster-1.png) ### I
-decided to go with `k=3` (nearest integer after the peak) as I think the
-improvement stops after `k=3`.
+![](HW4Mark_files/figure-markdown_strict/Betweeess_cluster-1.png)
 
-![](HW4Mark_files/figure-markdown_strict/kmeans_cluster-1.png) ### This
-plot depicts how the clusters divide the PCA plot, and it appears that
-each of these graphs belongs to a separate category. Let’s take a closer
-look at that. I begin by selecting the k-means cluster and grouping the
-tweets by cluster, then adding the total number of tweets. Remove the
-words `cluster`, `chatter` and `uncategorized` as they do not belong in
-any market segment.
+### I decided to go with `k=3` (nearest integer after the peak) as I think the improvement stops after `k=3`.
+
+![](HW4Mark_files/figure-markdown_strict/kmeans_cluster-1.png)
+
+### This plot depicts how the clusters divide the PCA plot, and it appears that each of these graphs belongs to a separate category. Let’s take a closer look at that. I begin by selecting the k-means cluster and grouping the tweets by cluster, then adding the total number of tweets. Remove the words `cluster`, `chatter` and `uncategorized` as they do not belong in any market segment.
 
 ### Let’s plot the top 5 categories suggested by each of the clusters used in k-means.
 
@@ -338,11 +330,8 @@ any market segment.
 ### It’s interesting to see that if a person buys `liquor`, that person is likely to buy `bottled beer` as well, which makes a lot of sense. There are many rules with `root vegetables` on the right hand side.
 
 ![](HW4Mark_files/figure-markdown_strict/Groceries%20Rules%20plot-1.png)![](HW4Mark_files/figure-markdown_strict/Groceries%20Rules%20plot-2.png)![](HW4Mark_files/figure-markdown_strict/Groceries%20Rules%20plot-3.png)
-### We can observe from these three graphs that the bulk of rules have
-less than 0.01 support. Another intriguing fact is that many regulations
-have a three or four-digit order. They also have lesser support, which
-is probably due to the fact that that particular combination is unlikely
-to be found in a shopping basket.
+
+### We can observe from these three graphs that the bulk of rules have less than 0.01 support. Another intriguing fact is that many regulations have a three or four-digit order. They also have lesser support, which is probably due to the fact that that particular combination is unlikely to be found in a shopping basket.
 
 ### I then plotted top 100 rules by lift
 
@@ -358,9 +347,9 @@ to be found in a shopping basket.
     ## max   =  100
     ## verbose   =  FALSE
 
-![](HW4Mark_files/figure-markdown_strict/unnamed-chunk-2-1.png) ### We
-can see the highest lift rule of `liquor` `&rarr;` `bottled beer`.
-`root vegetables` and `other vegetables` have very big circles.
+![](HW4Mark_files/figure-markdown_strict/unnamed-chunk-2-1.png)
+
+### We can see the highest lift rule of `liquor` `&rarr;` `bottled beer`. `root vegetables` and `other vegetables` have very big circles.
 
 ### The graph below shows top 50 rules by lift.
 
