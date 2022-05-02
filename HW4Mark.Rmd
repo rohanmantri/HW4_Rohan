@@ -18,6 +18,7 @@ library(arules)
 library(arulesViz)
 library(factoextra)
 library(ggpubr)
+library(png)
 
 ```
 
@@ -333,6 +334,16 @@ saveAsGraph(head(rules_grocery, 100, by='lift'), file = "rules_grocery.graphml")
 ```
 
 ### We can see the highest lift rule of `liquor` `&rarr;` `bottled beer`. `root vegetables` and `other vegetables` have very big circles.
+
+```{r}
+sub = subset(rules_grocery, subset=confidence > 0.01 & support > 0.01)
+saveAsGraph(sub, file = "groceries_rule_final3.graphml")
+```
+
+```{r}
+img <- png::readPNG("C:\\Users\\mantr\\Desktop\\Gephi.png")
+grid::grid.raster(img)
+```
 
 ### The graph below shows top 50 rules by lift.
 
